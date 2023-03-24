@@ -1,0 +1,78 @@
+version: '3'
+services:
+  flectra:
+    image: erispimages/erisp2:v1.0
+    container_name: demo
+    #tty: true
+    command: -- --dev=reload
+    #stdin_open: true
+    depends_on:
+      - postgres
+    links:
+      - "postgres:db"
+    ports:
+      - "7080:7073"
+    restart: always
+    networks:
+      net-erisp:
+        aliases:
+          - demo
+        #ipv4_address: 192.168.127.11
+    volumes:
+      - data:/var/lib/flectra
+      - config:/etc/flectra
+      - log:/var/log/flectra
+      - ./extra-addons:/mnt/extra-addons
+      - backups:/opt/flectra/backups
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+  
+  postgres:
+    image: postgres:10.0
+    container_name: postgres-demo
+    environment:
+      - POSTGRES_PASSWORD=flectra
+      - POSTGRES_USER=flectra
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    restart: always
+    volumes:
+      - ./postgres:/var/lib/postgresql/data/pgdata
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - net-erisp
+
+
+volumes:
+  data:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: $PWD/data
+  config:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: $PWD/config
+  log:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: $PWD/log
+  backups:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: $PWD/backups
+
+networks:
+  net-erisp:
+    external: true
